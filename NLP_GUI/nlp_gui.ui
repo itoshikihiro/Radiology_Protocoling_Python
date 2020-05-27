@@ -23,7 +23,7 @@
     </rect>
    </property>
    <property name="currentIndex">
-    <number>0</number>
+    <number>2</number>
    </property>
    <widget class="QWidget" name="cpt_tab">
     <attribute name="title">
@@ -38,11 +38,17 @@
        <height>211</height>
       </rect>
      </property>
+     <property name="focusPolicy">
+      <enum>Qt::ClickFocus</enum>
+     </property>
+     <property name="tabChangesFocus">
+      <bool>true</bool>
+     </property>
      <property name="plainText">
-      <string/>
+      <string notr="true"/>
      </property>
      <property name="placeholderText">
-      <string>Please enter the procedure</string>
+      <string>Please enter CPT text here</string>
      </property>
     </widget>
     <widget class="Line" name="line">
@@ -150,8 +156,14 @@
        <pointsize>15</pointsize>
       </font>
      </property>
+     <property name="focusPolicy">
+      <enum>Qt::ClickFocus</enum>
+     </property>
+     <property name="tabChangesFocus">
+      <bool>true</bool>
+     </property>
      <property name="plainText">
-      <string/>
+      <string notr="true"/>
      </property>
      <property name="placeholderText">
       <string>predicted CPT code</string>
@@ -202,8 +214,14 @@
        <pointsize>15</pointsize>
       </font>
      </property>
+     <property name="focusPolicy">
+      <enum>Qt::ClickFocus</enum>
+     </property>
+     <property name="tabChangesFocus">
+      <bool>true</bool>
+     </property>
      <property name="plainText">
-      <string/>
+      <string notr="true"/>
      </property>
      <property name="placeholderText">
       <string>if the predicted label was wrong, please enter the correct label here and click the 'correct' button</string>
@@ -227,6 +245,77 @@
       <string>CPT Code</string>
      </property>
     </widget>
+    <widget class="QLabel" name="success_label">
+     <property name="enabled">
+      <bool>false</bool>
+     </property>
+     <property name="geometry">
+      <rect>
+       <x>270</x>
+       <y>110</y>
+       <width>91</width>
+       <height>61</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <pointsize>18</pointsize>
+      </font>
+     </property>
+     <property name="text">
+      <string>Prediction
+Completed</string>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignCenter</set>
+     </property>
+    </widget>
+    <widget class="QLabel" name="success_label_2">
+     <property name="enabled">
+      <bool>false</bool>
+     </property>
+     <property name="geometry">
+      <rect>
+       <x>270</x>
+       <y>240</y>
+       <width>91</width>
+       <height>61</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <pointsize>18</pointsize>
+      </font>
+     </property>
+     <property name="text">
+      <string>Prediction
+Completed</string>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignCenter</set>
+     </property>
+    </widget>
+    <widget class="QLabel" name="correct_label">
+     <property name="enabled">
+      <bool>false</bool>
+     </property>
+     <property name="geometry">
+      <rect>
+       <x>510</x>
+       <y>410</y>
+       <width>91</width>
+       <height>21</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <pointsize>16</pointsize>
+      </font>
+     </property>
+     <property name="text">
+      <string>corrected</string>
+     </property>
+    </widget>
    </widget>
    <widget class="QWidget" name="icd_tab">
     <attribute name="title">
@@ -241,11 +330,17 @@
        <height>211</height>
       </rect>
      </property>
+     <property name="focusPolicy">
+      <enum>Qt::ClickFocus</enum>
+     </property>
+     <property name="tabChangesFocus">
+      <bool>true</bool>
+     </property>
      <property name="plainText">
-      <string/>
+      <string notr="true"/>
      </property>
      <property name="placeholderText">
-      <string>Please enter the procedure</string>
+      <string>Please enter ICD text here</string>
      </property>
     </widget>
     <widget class="QPushButton" name="icd_predict_button">
@@ -314,11 +409,17 @@
        <pointsize>15</pointsize>
       </font>
      </property>
+     <property name="focusPolicy">
+      <enum>Qt::ClickFocus</enum>
+     </property>
+     <property name="tabChangesFocus">
+      <bool>true</bool>
+     </property>
      <property name="plainText">
-      <string/>
+      <string notr="true"/>
      </property>
      <property name="placeholderText">
-      <string>predicted CPT code</string>
+      <string>predicted ICD code</string>
      </property>
     </widget>
     <widget class="QLabel" name="icd_output_label_2">
@@ -384,8 +485,14 @@
        <pointsize>15</pointsize>
       </font>
      </property>
+     <property name="focusPolicy">
+      <enum>Qt::ClickFocus</enum>
+     </property>
+     <property name="tabChangesFocus">
+      <bool>true</bool>
+     </property>
      <property name="plainText">
-      <string/>
+      <string notr="true"/>
      </property>
      <property name="placeholderText">
       <string>if the predicted label was wrong, please enter the correct label here and click the 'correct' button</string>
@@ -430,6 +537,77 @@
       <set>Qt::AlignCenter</set>
      </property>
     </widget>
+    <widget class="QLabel" name="success_label_5">
+     <property name="enabled">
+      <bool>false</bool>
+     </property>
+     <property name="geometry">
+      <rect>
+       <x>270</x>
+       <y>110</y>
+       <width>91</width>
+       <height>61</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <pointsize>18</pointsize>
+      </font>
+     </property>
+     <property name="text">
+      <string>Prediction
+Completed</string>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignCenter</set>
+     </property>
+    </widget>
+    <widget class="QLabel" name="success_label_6">
+     <property name="enabled">
+      <bool>false</bool>
+     </property>
+     <property name="geometry">
+      <rect>
+       <x>270</x>
+       <y>240</y>
+       <width>91</width>
+       <height>61</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <pointsize>18</pointsize>
+      </font>
+     </property>
+     <property name="text">
+      <string>Prediction
+Completed</string>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignCenter</set>
+     </property>
+    </widget>
+    <widget class="QLabel" name="correct_label_4">
+     <property name="enabled">
+      <bool>false</bool>
+     </property>
+     <property name="geometry">
+      <rect>
+       <x>510</x>
+       <y>410</y>
+       <width>71</width>
+       <height>20</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <pointsize>16</pointsize>
+      </font>
+     </property>
+     <property name="text">
+      <string>corrected</string>
+     </property>
+    </widget>
    </widget>
    <widget class="QWidget" name="com_tab">
     <attribute name="title">
@@ -444,11 +622,17 @@
        <height>211</height>
       </rect>
      </property>
+     <property name="focusPolicy">
+      <enum>Qt::ClickFocus</enum>
+     </property>
+     <property name="tabChangesFocus">
+      <bool>true</bool>
+     </property>
      <property name="plainText">
-      <string/>
+      <string notr="true"/>
      </property>
      <property name="placeholderText">
-      <string>Please enter the procedure</string>
+      <string>Please enter radioloogy text</string>
      </property>
     </widget>
     <widget class="QPushButton" name="whole_predict_button">
@@ -517,8 +701,14 @@
        <pointsize>15</pointsize>
       </font>
      </property>
+     <property name="focusPolicy">
+      <enum>Qt::ClickFocus</enum>
+     </property>
+     <property name="tabChangesFocus">
+      <bool>true</bool>
+     </property>
      <property name="plainText">
-      <string/>
+      <string notr="true"/>
      </property>
      <property name="placeholderText">
       <string>predicted CPT code</string>
@@ -587,11 +777,17 @@
        <pointsize>15</pointsize>
       </font>
      </property>
+     <property name="focusPolicy">
+      <enum>Qt::ClickFocus</enum>
+     </property>
+     <property name="tabChangesFocus">
+      <bool>true</bool>
+     </property>
      <property name="plainText">
-      <string/>
+      <string notr="true"/>
      </property>
      <property name="placeholderText">
-      <string>if the predicted label was wrong, please enter the correct label here and click the 'correct' button</string>
+      <string>if wrong, correct CPT code here</string>
      </property>
     </widget>
     <widget class="QPushButton" name="whole_cpt_correct_button">
@@ -647,11 +843,17 @@
        <pointsize>15</pointsize>
       </font>
      </property>
+     <property name="focusPolicy">
+      <enum>Qt::ClickFocus</enum>
+     </property>
+     <property name="tabChangesFocus">
+      <bool>true</bool>
+     </property>
      <property name="plainText">
-      <string/>
+      <string notr="true"/>
      </property>
      <property name="placeholderText">
-      <string>predicted CPT code</string>
+      <string>predicted ICD code</string>
      </property>
     </widget>
     <widget class="QLabel" name="whole_icd_output_label">
@@ -686,11 +888,17 @@
        <pointsize>15</pointsize>
       </font>
      </property>
+     <property name="focusPolicy">
+      <enum>Qt::ClickFocus</enum>
+     </property>
+     <property name="tabChangesFocus">
+      <bool>true</bool>
+     </property>
      <property name="plainText">
-      <string/>
+      <string notr="true"/>
      </property>
      <property name="placeholderText">
-      <string>if the predicted label was wrong, please enter the correct label here and click the 'correct' button</string>
+      <string>if wrong, correct ICD code here</string>
      </property>
     </widget>
     <widget class="QPushButton" name="whole_icd_correct_button">
@@ -709,6 +917,98 @@
      </property>
      <property name="text">
       <string>ICD_correct</string>
+     </property>
+    </widget>
+    <widget class="QLabel" name="success_label_3">
+     <property name="enabled">
+      <bool>false</bool>
+     </property>
+     <property name="geometry">
+      <rect>
+       <x>270</x>
+       <y>240</y>
+       <width>91</width>
+       <height>61</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <pointsize>18</pointsize>
+      </font>
+     </property>
+     <property name="text">
+      <string>Prediction
+Completed</string>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignCenter</set>
+     </property>
+    </widget>
+    <widget class="QLabel" name="success_label_4">
+     <property name="enabled">
+      <bool>false</bool>
+     </property>
+     <property name="geometry">
+      <rect>
+       <x>270</x>
+       <y>110</y>
+       <width>91</width>
+       <height>61</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <pointsize>18</pointsize>
+      </font>
+     </property>
+     <property name="text">
+      <string>Prediction
+Completed</string>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignCenter</set>
+     </property>
+    </widget>
+    <widget class="QLabel" name="correct_label_2">
+     <property name="enabled">
+      <bool>false</bool>
+     </property>
+     <property name="geometry">
+      <rect>
+       <x>210</x>
+       <y>411</y>
+       <width>71</width>
+       <height>20</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <pointsize>16</pointsize>
+      </font>
+     </property>
+     <property name="text">
+      <string>corrected</string>
+     </property>
+    </widget>
+    <widget class="QLabel" name="correct_label_3">
+     <property name="enabled">
+      <bool>false</bool>
+     </property>
+     <property name="geometry">
+      <rect>
+       <x>350</x>
+       <y>410</y>
+       <width>71</width>
+       <height>20</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <pointsize>16</pointsize>
+      </font>
+     </property>
+     <property name="text">
+      <string>corrected</string>
      </property>
     </widget>
    </widget>

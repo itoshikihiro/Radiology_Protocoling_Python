@@ -38,7 +38,7 @@ class Ui_cpt_list_gui(object):
     # setupUi
 
     def retranslateUi(self, cpt_list_gui):
-        cpt_list_gui.setWindowTitle(QCoreApplication.translate("cpt_list_gui", u"Form", None))
+        cpt_list_gui.setWindowTitle(QCoreApplication.translate("cpt_list_gui", u"cpt_code_list", None))
         self.label.setText(QCoreApplication.translate("cpt_list_gui", u"CPT codes", None))
     # retranslateUi
 

@@ -38,7 +38,7 @@ class Ui_icd_list_gui(object):
     # setupUi
 
     def retranslateUi(self, icd_list_gui):
-        icd_list_gui.setWindowTitle(QCoreApplication.translate("icd_list_gui", u"Form", None))
+        icd_list_gui.setWindowTitle(QCoreApplication.translate("icd_list_gui", u"icd_code_list", None))
         self.label.setText(QCoreApplication.translate("icd_list_gui", u"ICD codes", None))
     # retranslateUi
 

@@ -233,12 +233,16 @@ class NLP_GUI(QMainWindow, Ui_nlp_gui):
         self.cpt_file_dir = './saved_records/saved_cpt_records.csv'
         self.icd_file_dir = './saved_records/saved_icd_records.csv'
         self.whole_file_dir = './saved_records/saved_whole_records.csv'
+        # universal counter
+        self.uni_counter = 0
 
     def cpt_prediction(self):
-        if os.path.isfile(self.cpt_file_dir):
-            self.cpt_df.to_csv(self.cpt_file_dir, mode='a', index=False, header=False)
-        else:
-            self.cpt_df.to_csv(self.cpt_file_dir, mode='w', index=False)
+        self.correct_label.setEnabled(False)
+        if not self.cpt_df.loc[0].isnull().all():
+            if os.path.isfile(self.cpt_file_dir):
+                self.cpt_df.to_csv(self.cpt_file_dir, mode='a', index=False, header=False)
+            else:
+                self.cpt_df.to_csv(self.cpt_file_dir, mode='w', index=False)
         ori_cpt_text = str(self.cpt_input_text.toPlainText())
         cpt_text = clean_txt(ori_cpt_text)
         cpt_text = word_averaging(self.wv, cpt_text)
@@ -247,20 +251,33 @@ class NLP_GUI(QMainWindow, Ui_nlp_gui):
         cpt_code = str(result[0])
         cpt_description = self.cpt_map.get(cpt_code)
         output_text = cpt_code +'\n\n'+ cpt_description
+        self.cpt_correct_text.clear()
+        if self.uni_counter%2 == 0:
+            self.success_label.setEnabled(True)
+            self.success_label_2.setEnabled(False)
+        else:
+            self.success_label_2.setEnabled(True)
+            self.success_label.setEnabled(False)
         self.cpt_output_text.setPlainText(output_text)
         self.cpt_df.loc[0] = [ori_cpt_text, cpt_code, cpt_description]
+        self.uni_counter += 1
 
     def cpt_correct(self):
+        self.success_label.setEnabled(False)
+        self.success_label_2.setEnabled(False)
         changed_cpt_code = str(self.cpt_correct_text.toPlainText())
         changed_cpt_desci = self.cpt_map.get(changed_cpt_code)
         ori_cpt_text = self.cpt_df.loc[0][0]
         self.cpt_df.loc[0] = [ori_cpt_text, changed_cpt_code, changed_cpt_desci]
+        self.correct_label.setEnabled(True)
 
     def icd_prediction(self):
-        if os.path.isfile(self.icd_file_dir):
-            self.icd_df.to_csv(self.icd_file_dir, mode='a', index=False, header=False)
-        else:
-            self.icd_df.to_csv(self.icd_file_dir, mode='w', index=False)
+        self.correct_label_4.setEnabled(False)
+        if not self.icd_df.loc[0].isnull().all():
+            if os.path.isfile(self.icd_file_dir):
+                self.icd_df.to_csv(self.icd_file_dir, mode='a', index=False, header=False)
+            else:
+                self.icd_df.to_csv(self.icd_file_dir, mode='w', index=False)
         ori_icd_text = str(self.icd_input_text.toPlainText())
         icd_text = clean_txt(ori_icd_text)
         icd_text = word_averaging(self.wv, icd_text)
@@ -269,20 +286,36 @@ class NLP_GUI(QMainWindow, Ui_nlp_gui):
         icd_code = str(self.icd_array.get(result[0]))
         icd_descri = self.icd_map.get(icd_code)
         output_text = icd_code +'\n\n'+ icd_descri
+        self.icd_correct_text.clear()
+        if self.uni_counter%2 == 0:
+            self.success_label_5.setEnabled(True)
+            self.success_label_6.setEnabled(False)
+        else:
+            self.success_label_6.setEnabled(True)
+            self.success_label_5.setEnabled(False)
         self.icd_output_text.setPlainText(output_text)
         self.icd_df.loc[0] = [ori_icd_text, icd_code, icd_descri]
+        self.uni_counter += 1
+
 
     def icd_correct(self):
+        self.success_label_6.setEnabled(False)
+        self.success_label_5.setEnabled(False)
         changed_icd_code = str(self.icd_correct_text.toPlainText())
         changed_icd_desci = self.icd_map.get(changed_icd_code)
         ori_icd_text = self.icd_df.loc[0][0]
         self.icd_df.loc[0] = [ori_icd_text, changed_icd_code, changed_icd_desci]
+        self.correct_label_4.setEnabled(True)
 
     def whole_text_prediction(self):
-        if os.path.isfile(self.whole_file_dir):
-            self.whole_df.to_csv(self.whole_file_dir, mode='a', index=False, header=False)
-        else:
-            self.whole_df.to_csv(self.whole_file_dir, mode='w', index=False)
+        self.correct_label_2.setEnabled(False)
+        self.correct_label_3.setEnabled(False)
+
+        if not self.whole_df.loc[0].isnull().all():
+            if os.path.isfile(self.whole_file_dir):
+                self.whole_df.to_csv(self.whole_file_dir, mode='a', index=False, header=False)
+            else:
+                self.whole_df.to_csv(self.whole_file_dir, mode='w', index=False)
         whole_text = str(self.whole_input_text.toPlainText())
         # cpt part
         cpt_text = remove_unreadable(whole_text)
@@ -312,25 +345,45 @@ class NLP_GUI(QMainWindow, Ui_nlp_gui):
         icd_code = str(self.icd_array.get(icd_result[0]))
         icd_description = self.icd_map.get(icd_code)
         icd_output_text = icd_code + '\n\n' + icd_description
+        self.whole_cpt_correct_text.clear()
+        self.whole_icd_correct_text.clear()
+        if self.uni_counter%2 == 0:
+            self.success_label_3.setEnabled(True)
+            self.success_label_4.setEnabled(False)
+        else:
+            self.success_label_4.setEnabled(True)
+            self.success_label_3.setEnabled(False)
         self.whole_cpt_output_text.setPlainText(cpt_output_text)
         self.whole_icd_output_text.setPlainText(icd_output_text)
         self.whole_df.loc[0] = [whole_text, cpt_code, cpt_description, icd_code, icd_description]
+        self.uni_counter += 1
+
 
     def whole_cpt_correct(self):
+        self.success_label_4.setEnabled(False)
+        self.success_label_3.setEnabled(False)
+        self.correct_label_3.setEnabled(False)
+
         changed_cpt_code = str(self.whole_cpt_correct_text.toPlainText())
         changed_cpt_desci = self.cpt_map.get(changed_cpt_code)
         ori_whole_text = self.whole_df.loc[0][0]
         ori_icd_code = self.whole_df.loc[0][3]
         ori_icd_des = self.whole_df.loc[0][4]
         self.whole_df.loc[0] = [ori_whole_text, changed_cpt_code, changed_cpt_desci, ori_icd_code, ori_icd_des]
+        self.correct_label_2.setEnabled(True)
 
     def whole_icd_corect(self):
+        self.success_label_4.setEnabled(False)
+        self.success_label_3.setEnabled(False)
+        self.correct_label_2.setEnabled(False)
+
         changed_icd_code = str(self.whole_icd_correct_text.toPlainText())
         changed_icd_desci = self.icd_map.get(changed_icd_code)
         ori_whole_text = self.whole_df.loc[0][0]
         ori_cpt_code = self.whole_df.loc[0][1]
         ori_cpt_des = self.whole_df.loc[0][2]
         self.whole_df.loc[0] = [ori_whole_text, ori_cpt_code, ori_cpt_des, changed_icd_code, changed_icd_desci]
+        self.correct_label_3.setEnabled(True)
 
     # rewrite the actions before the main window closing
     def closeEvent(self, event:PySide2.QtGui.QCloseEvent):
