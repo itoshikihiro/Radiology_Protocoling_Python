@@ -12,6 +12,7 @@ from sklearn.pipeline import Pipeline
 import sklearn.preprocessing
 from sklearn.preprocessing import LabelEncoder
 
+
 import itertools
 from sklearn.model_selection import GridSearchCV
 from sklearn.ensemble import RandomForestClassifier
@@ -20,15 +21,18 @@ from xgboost import XGBClassifier
 
 from sklearn.metrics import accuracy_score
 from sklearn.metrics import classification_report
+from sklearn.metrics import roc_auc_score
 from string import ascii_uppercase
 
 import gensim
 import logging
 
 import re
+import pickle
 
-
-# In[2]:
+# In[3]:
+wv = gensim.models.KeyedVectors.load_word2vec_format("../vectorization_models/embedding_word2vec.txt", binary=False)
+wv.init_sims(replace=True)
 
 def remove_special_char(txt):
     return re.sub(r'[^a-zA-Z0-9 :,_/;.]',r'',txt)
@@ -103,7 +107,7 @@ def clean_txt(txt):
         new_words.append(word)
     if not new_words:
         return 'N/A'
-    return ' '.join(new_words)
+    return new_words
 
 
 def icd_ext(txt):
@@ -242,117 +246,90 @@ def load_label(df):
 
 
 # In[12]:
+train_df = load_data("../data/train.xlsx")
+data_df = load_data("../data/filter.xlsx")
 
+data_df['general_icd_label'] = load_label(data_df)
 
-train_df = load_data("../../data/train.xlsx")
-test_df = load_data("../../data/test.xlsx")
+features = data_df['ICD_text']
+labels = data_df['general_icd_label']
 
+label_encoder = LabelEncoder()
+label_encoder.fit(labels)
 
-# In[13]:
 
 
 train_df['general_icd_label'] = load_label(train_df)
-test_df['general_icd_label'] = load_label(test_df)
-
-
-# In[14]:
-
 
 X_train = train_df['ICD_text']
 y_train = train_df['general_icd_label']
-X_test = test_df['ICD_text']
-y_test = test_df['general_icd_label']
+y_train = label_encoder.transform(y_train)
 
 
-# In[15]:
+def word_averaging(wv, words):
+    all_words, mean = set(), []
 
+    for word in words:
+        if isinstance(word, np.ndarray):
+            mean.append(word)
+        elif word in wv.vocab:
+            mean.append(wv.vectors_norm[wv.vocab[word].index])
+            all_words.add(wv.vocab[word].index)
 
-label_encoder = LabelEncoder()
+    if not mean:
+        logging.warning("cannot compute similarity with no input %s", words)
+        # FIXME: remove these examples in pre-processing
+        print(words)
+        return np.zeros(wv.vector_size,)
 
+    mean = np.array(mean).mean(axis=0)
+    return mean
+
+def  word_averaging_list(wv, text_list):
+    return np.vstack([word_averaging(wv, post) for post in text_list ])
+
+X_train = word_averaging_list(wv, X_train)
 
 # In[16]:
-
-
-y_train = label_encoder.fit_transform(y_train)
-y_test = label_encoder.fit_transform(y_test)
-
-
-# In[17]:
-
-
-vect = CountVectorizer(stop_words='english', ngram_range=(1, 2), max_features=400)
-tfidf = TfidfTransformer()
-def X_vectorization(df):
-    return_df = vect.fit_transform(df)
-    return_df = tfidf.fit_transform(return_df)
-    return return_df
-
-
-# In[18]:
-
-
-X_train = X_vectorization(X_train)
-X_test = X_vectorization(X_test)
-
-
-# In[19]:
-
-
-def log_reg():
-    print(" ")
-    print("logistic regression")
+def save_model_log(file_name,train_feature, train_label):
     reg = LogisticRegression(
-        C = 10,
+        C = 5,
         penalty = 'l2',
         random_state=0,
         solver = 'liblinear',
         class_weight='balanced')
-    reg = reg.fit(X_train, y_train)
-    pred = reg.predict(X_test)
-    print (classification_report(y_test, pred, target_names=label_encoder.classes_))
+    reg = reg.fit(train_feature, train_label)
+    pickle.dump(reg, open(file_name, 'wb'))
+    print('end process_log')
 
 
-# In[82]:
-
-
-def ran_for():
-    print(" ")
-    print("random forest")
+def save_model_ran_for(file_name,train_feature, train_label):
     reg = RandomForestClassifier(
         random_state=0,
-        max_depth = 12,
+        max_depth = 13,
         max_features = 50,
         min_samples_split = 2,
         n_estimators = 150,
         class_weight = 'balanced',
         n_jobs=-1)
-    reg = reg.fit(X_train, y_train)
-    pred = reg.predict(X_test)
-    print (classification_report(y_test, pred, target_names=label_encoder.classes_))
+    reg = reg.fit(train_feature, train_label)
+    pickle.dump(reg, open(file_name, 'wb'))
+    print('end process ran for')
 
 
-# In[ ]:
-
-
-def xgboost_test():
-    print(" ")
-    print("xgboost")
+def save_model_xgboost(file_name,train_feature, train_label):
     reg = XGBClassifier(
         n_estimators=200,
-        max_depth=11,
+        max_depth=13,
         max_features = 50,
         min_samples_split = 2,
         random_state=0,
         n_jobs = -1)
-    reg = reg.fit(X_train, y_train)
-    pred = reg.predict(X_test)
-    print (classification_report(y_test, pred, target_names=label_encoder.classes_))
+    reg = reg.fit(train_feature, train_label)
+    pickle.dump(reg, open(file_name, 'wb'))
+    print('end process xgboost')
 
 
-# In[ ]:
-
-
-log_reg()
-ran_for()
-xgboost_test()
-
+save_model_log('save_log.sav',X_train, y_train)
+save_model_ran_for('save_ran_for.sav',X_train, y_train)
+save_model_xgboost('save_xgboost.sav',X_train, y_train)

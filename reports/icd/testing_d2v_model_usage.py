@@ -1,3 +1,8 @@
+#!/usr/bin/env python
+# coding: utf-8
+
+# In[1]:
+
 
 import json
 import pandas as pd
@@ -8,7 +13,6 @@ from gensim.parsing import preprocessing
 from gensim.parsing.preprocessing import strip_tags, strip_punctuation,strip_numeric,remove_stopwords, stem_text
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.feature_extraction.text import TfidfTransformer
-from sklearn.model_selection import train_test_split
 from sklearn.pipeline import Pipeline
 import sklearn.preprocessing
 from sklearn.preprocessing import LabelEncoder
@@ -21,21 +25,17 @@ from xgboost import XGBClassifier
 
 from sklearn.metrics import accuracy_score
 from sklearn.metrics import classification_report
+from sklearn.metrics import roc_auc_score
 from string import ascii_uppercase
 
 import gensim
 import logging
 
 import re
-
-
-# In[125]:
-
+import pickle
 
 dv = gensim.models.doc2vec.Doc2Vec.load("../vectorization_models/doc2vec_trained.model")
 
-
-# In[99]:
 
 
 def remove_special_char(txt):
@@ -249,103 +249,154 @@ def load_label(df):
     return general_icd_label
 
 
-# In[128]:
-
-
-train_df = load_data("../data/train.xlsx")
-test_df = load_data("../data/test.xlsx")
+# In[12]:
 data_df = load_data("../data/filter.xlsx")
-
-
-
-train_df['general_icd_label'] = load_label(train_df)
-test_df['general_icd_label'] = load_label(test_df)
 data_df['general_icd_label'] = load_label(data_df)
 
-
-# In[109]:
-
-
-X_train = train_df['ICD_text']
-y_train = train_df['general_icd_label']
-X_test = test_df['ICD_text']
-y_test = test_df['general_icd_label']
-
-
-# In[133]:
-
+features = data_df['ICD_text']
+labels = data_df['general_icd_label']
 
 label_encoder = LabelEncoder()
+label_encoder.fit(labels)
 
-label_encoder.fit(data_df['general_icd_label'])
+test_df = load_data("../data/test.xlsx")
 
-y_train = label_encoder.transform(y_train)
+
+test_df['general_icd_label'] = load_label(test_df)
+
+
+X_test = test_df['ICD_text']
+y_test = test_df['general_icd_label']
 y_test = label_encoder.transform(y_test)
 
 
-# In[135]:
-
+# In[17]:
 
 def vectorize_data(dv, data):
     return np.vstack([dv.infer_vector(d) for d in data])
 
 
-# In[136]:
+X_test = vectorize_data(dv, X_test)
+
+# In[9]:
 
 
-X_train = vectorize_data(dv,X_train)
-X_test = vectorize_data(dv,X_test)
+def load_model_predict(model_name, test_data):
+    loaded_model = pickle.load(open(model_name, 'rb'))
+    result = loaded_model.predict(test_data)
+    return result
 
 
-# In[137]:
+# In[10]:
 
 
-def log_reg():
-    print(" ")
-    print("logistic regression")
-    reg = LogisticRegression(
-        random_state=0,
-        solver = 'newton-cg',
-        class_weight='balanced')
-    reg = reg.fit(X_train, y_train)
-    pred = reg.predict(X_test)
-    print (classification_report(y_test, pred, target_names=label_encoder.classes_))
+predicted_icd = load_model_predict('icd_d2v_log.sav', X_test)
 
 
-# In[82]:
+# In[16]:
 
 
-def ran_for():
-    print(" ")
-    print("random forest")
-    reg = RandomForestClassifier(
-        random_state=0,
-        class_weight = 'balanced',
-        n_jobs=-1)
-    reg = reg.fit(X_train, y_train)
-    pred = reg.predict(X_test)
-    print (classification_report(y_test, pred, target_names=label_encoder.classes_))
+new_df = {
+    'radiology_text':test_df['Radiology text'],
+    'icd_text':test_df['ICD_text'],
+    'icd':test_df['icd'],
+    'ori_icd_label':label_encoder.inverse_transform(y_test),
+    'prediced_icd_label':label_encoder.inverse_transform(predicted_icd)
+}
+
+
+# In[18]:
+
+
+new_df = pd.DataFrame(new_df)
+
+
+# In[12]:
+
+
+new_df.to_csv('test_result_icd_d2v_log.csv')
+
+
+# In[32]:
+
+
+f = open("test_result_icd_d2v_log.txt", "w")
+f.write(classification_report(y_test, predicted_icd, target_names=label_encoder.classes_))
+f.close()
+
+
+# In[25]:
+
+
+predicted_icd = load_model_predict('icd_d2v_ran_for.sav', X_test)
+
+
+# In[26]:
+
+
+new_df = {
+    'radiology_text':test_df['Radiology text'],
+    'icd_text':test_df['ICD_text'],
+    'icd':test_df['icd'],
+    'ori_icd_label':label_encoder.inverse_transform(y_test),
+    'prediced_icd_label':label_encoder.inverse_transform(predicted_icd)
+}
+
+
+# In[27]:
+
+
+new_df = pd.DataFrame(new_df)
+
+
+# In[12]:
+
+
+new_df.to_csv('test_result_icd_d2v_ran_for.csv')
 
 
 # In[ ]:
 
 
-def xgboost_test():
-    print(" ")
-    print("xgboost")
-    reg = XGBClassifier(
-        n_estimators=100,
-        max_depth=3,
-        random_state=0,
-        n_jobs = -1)
-    reg = reg.fit(X_train, y_train)
-    pred = reg.predict(X_test)
-    print (classification_report(y_test, pred, target_names=label_encoder.classes_))
+f = open("test_result_icd_d2v_ran_for.txt", "w")
+f.write(classification_report(y_test, predicted_icd, target_names=label_encoder.classes_))
+f.close()
+
+
+# In[28]:
+
+
+predicted_icd = load_model_predict('icd_d2v_xgboost.sav', X_test)
+
+
+# In[29]:
+
+
+new_df = {
+    'radiology_text':test_df['Radiology text'],
+    'icd_text':test_df['ICD_text'],
+    'icd':test_df['icd'],
+    'ori_icd_label':label_encoder.inverse_transform(y_test),
+    'prediced_icd_label':label_encoder.inverse_transform(predicted_icd)
+}
+
+
+# In[30]:
+
+
+new_df = pd.DataFrame(new_df)
+
+
+# In[12]:
+
+
+new_df.to_csv('test_result_icd_d2v_xgboost.csv')
 
 
 # In[ ]:
 
 
-log_reg()
-ran_for()
-xgboost_test()
+f = open("test_result_icd_d2v_xgboost.txt", "w")
+f.write(classification_report(y_test, predicted_icd, target_names=label_encoder.classes_))
+f.close()
+

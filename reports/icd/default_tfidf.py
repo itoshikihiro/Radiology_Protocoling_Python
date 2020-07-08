@@ -244,8 +244,9 @@ def load_label(df):
 # In[12]:
 
 
-train_df = load_data("../../data/train.xlsx")
-test_df = load_data("../../data/test.xlsx")
+train_df = load_data("../data/train.xlsx")
+test_df = load_data("../data/test.xlsx")
+data_df = load_data("../data/filter.xlsx")
 
 
 # In[13]:
@@ -253,6 +254,7 @@ test_df = load_data("../../data/test.xlsx")
 
 train_df['general_icd_label'] = load_label(train_df)
 test_df['general_icd_label'] = load_label(test_df)
+data_df['general_icd_label'] = load_label(data_df)
 
 
 # In[14]:
@@ -269,13 +271,11 @@ y_test = test_df['general_icd_label']
 
 label_encoder = LabelEncoder()
 
+label_encoder.fit(data_df['general_icd_label'])
 
-# In[16]:
 
-
-y_train = label_encoder.fit_transform(y_train)
-y_test = label_encoder.fit_transform(y_test)
-
+y_train = label_encoder.transform(y_train)
+y_test = label_encoder.transform(y_test)
 
 # In[17]:
 

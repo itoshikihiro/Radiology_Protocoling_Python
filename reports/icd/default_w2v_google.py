@@ -32,7 +32,7 @@ import re
 # In[ ]:
 
 
-wv = gensim.models.KeyedVectors.load_word2vec_format("../../data/GoogleNews-vectors-negative300.bin.gz", binary=True)
+wv = gensim.models.KeyedVectors.load_word2vec_format("../vectorization_models/GoogleNews-vectors-negative300.bin.gz", binary=True)
 wv.init_sims(replace=True)
 
 
@@ -252,13 +252,14 @@ def load_label(df):
 # In[105]:
 
 
-train_df = load_data("../../data/train.xlsx")
-test_df = load_data("../../data/test.xlsx")
-
+train_df = load_data("../data/train.xlsx")
+test_df = load_data("../data/test.xlsx")
+data_df = load_data("../data/filter.xlsx")
 
 
 train_df['general_icd_label'] = load_label(train_df)
 test_df['general_icd_label'] = load_label(test_df)
+data_df['general_icd_label'] = load_label(data_df)
 
 
 # In[109]:
@@ -278,9 +279,11 @@ label_encoder = LabelEncoder()
 
 # In[111]:
 
+label_encoder.fit(data_df['general_icd_label'])
 
-y_train = label_encoder.fit_transform(y_train)
-y_test = label_encoder.fit_transform(y_test)
+y_train = label_encoder.transform(y_train)
+y_test = label_encoder.transform(y_test)
+
 
 # In[118]:
 

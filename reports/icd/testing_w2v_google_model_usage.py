@@ -1,3 +1,8 @@
+#!/usr/bin/env python
+# coding: utf-8
+
+# In[1]:
+
 
 import json
 import pandas as pd
@@ -8,7 +13,6 @@ from gensim.parsing import preprocessing
 from gensim.parsing.preprocessing import strip_tags, strip_punctuation,strip_numeric,remove_stopwords, stem_text
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.feature_extraction.text import TfidfTransformer
-from sklearn.model_selection import train_test_split
 from sklearn.pipeline import Pipeline
 import sklearn.preprocessing
 from sklearn.preprocessing import LabelEncoder
@@ -21,22 +25,17 @@ from xgboost import XGBClassifier
 
 from sklearn.metrics import accuracy_score
 from sklearn.metrics import classification_report
+from sklearn.metrics import roc_auc_score
 from string import ascii_uppercase
 
 import gensim
 import logging
 
 import re
+import pickle
 
-
-# In[ ]:
-
-
-wv = gensim.models.KeyedVectors.load_word2vec_format("../../data/GoogleNews-vectors-negative300.bin.gz", binary=True)
+wv = gensim.models.KeyedVectors.load_word2vec_format("../vectorization_models/GoogleNews-vectors-negative300.bin.gz", binary=True)
 wv.init_sims(replace=True)
-
-
-# In[99]:
 
 
 def remove_special_char(txt):
@@ -249,40 +248,26 @@ def load_label(df):
         general_icd_label.append(x)
     return general_icd_label
 
-# In[105]:
+
+# In[12]:
+data_df = load_data("../data/filter.xlsx")
+data_df['general_icd_label'] = load_label(data_df)
+
+features = data_df['ICD_text']
+labels = data_df['general_icd_label']
+
+label_encoder = LabelEncoder()
+label_encoder.fit(labels)
+
+test_df = load_data("../data/test.xlsx")
 
 
-train_df = load_data("../../data/train.xlsx")
-test_df = load_data("../../data/test.xlsx")
-
-
-
-train_df['general_icd_label'] = load_label(train_df)
 test_df['general_icd_label'] = load_label(test_df)
 
 
-# In[109]:
-
-
-X_train = train_df['ICD_text']
-y_train = train_df['general_icd_label']
 X_test = test_df['ICD_text']
 y_test = test_df['general_icd_label']
-
-
-# In[110]:
-
-
-label_encoder = LabelEncoder()
-
-
-# In[111]:
-
-
-y_train = label_encoder.fit_transform(y_train)
-y_test = label_encoder.fit_transform(y_test)
-
-# In[118]:
+y_test = label_encoder.transform(y_test)
 
 
 def word_averaging(wv, words):
@@ -296,9 +281,9 @@ def word_averaging(wv, words):
             all_words.add(wv.vocab[word].index)
 
     if not mean:
-        #logging.warning("cannot compute similarity with no input %s", words)
+        logging.warning("cannot compute similarity with no input %s", words)
         # FIXME: remove these examples in pre-processing
-        #print(words)
+        print(words)
         return np.zeros(wv.vector_size,)
 
     mean = np.array(mean).mean(axis=0)
@@ -307,69 +292,127 @@ def word_averaging(wv, words):
 def  word_averaging_list(wv, text_list):
     return np.vstack([word_averaging(wv, post) for post in text_list ])
 
+X_test = word_averaging_list(wv, X_test)
 
-# In[119]:
-
-
-X_train = word_averaging_list(wv,X_train)
-X_test = word_averaging_list(wv,X_test)
+# In[9]:
 
 
-def log_reg():
-    print(" ")
-    print("logistic regression")
-    reg = LogisticRegression(
-        C = 10,
-        penalty = 'l2',
-        random_state=0,
-        solver = 'liblinear',
-        class_weight='balanced')
-    reg = reg.fit(X_train, y_train)
-    pred = reg.predict(X_test)
-    print (classification_report(y_test, pred, target_names=label_encoder.classes_))
+def load_model_predict(model_name, test_data):
+    loaded_model = pickle.load(open(model_name, 'rb'))
+    result = loaded_model.predict(test_data)
+    return result
 
 
-# In[82]:
+# In[10]:
 
 
-def ran_for():
-    print(" ")
-    print("random forest")
-    reg = RandomForestClassifier(
-        random_state=0,
-        max_depth = 12,
-        max_features = 50,
-        min_samples_split = 2,
-        n_estimators = 150,
-        class_weight = 'balanced',
-        n_jobs=-1)
-    reg = reg.fit(X_train, y_train)
-    pred = reg.predict(X_test)
-    print (classification_report(y_test, pred, target_names=label_encoder.classes_))
+predicted_icd = load_model_predict('save_log.sav', X_test)
+
+
+# In[16]:
+
+
+new_df = {
+    'radiology_text':test_df['Radiology text'],
+    'icd_text':test_df['ICD_text'],
+    'icd':test_df['icd'],
+    'ori_icd_label':label_encoder.inverse_transform(y_test),
+    'prediced_icd_label':label_encoder.inverse_transform(predicted_icd)
+}
+
+
+# In[18]:
+
+
+new_df = pd.DataFrame(new_df)
+
+
+# In[12]:
+
+
+new_df.to_csv('test_log.csv')
+
+
+# In[32]:
+
+
+f = open("test_log.txt", "w")
+f.write(classification_report(y_test, predicted_icd, target_names=label_encoder.classes_))
+f.close()
+
+
+# In[25]:
+
+
+predicted_icd = load_model_predict('save_ran_for.sav', X_test)
+
+
+# In[26]:
+
+
+new_df = {
+    'radiology_text':test_df['Radiology text'],
+    'icd_text':test_df['ICD_text'],
+    'icd':test_df['icd'],
+    'ori_icd_label':label_encoder.inverse_transform(y_test),
+    'prediced_icd_label':label_encoder.inverse_transform(predicted_icd)
+}
+
+
+# In[27]:
+
+
+new_df = pd.DataFrame(new_df)
+
+
+# In[12]:
+
+
+new_df.to_csv('test_ran_for.csv')
 
 
 # In[ ]:
 
 
-def xgboost_test():
-    print(" ")
-    print("xgboost")
-    reg = XGBClassifier(
-        n_estimators=200,
-        max_depth=11,
-        max_features = 50,
-        min_samples_split = 2,
-        random_state=0,
-        n_jobs = -1)
-    reg = reg.fit(X_train, y_train)
-    pred = reg.predict(X_test)
-    print (classification_report(y_test, pred, target_names=label_encoder.classes_))
+f = open("test_ran_for.txt", "w")
+f.write(classification_report(y_test, predicted_icd, target_names=label_encoder.classes_))
+f.close()
+
+
+# In[28]:
+
+
+predicted_icd = load_model_predict('save_xgboost.sav', X_test)
+
+
+# In[29]:
+
+
+new_df = {
+    'radiology_text':test_df['Radiology text'],
+    'icd_text':test_df['ICD_text'],
+    'icd':test_df['icd'],
+    'ori_icd_label':label_encoder.inverse_transform(y_test),
+    'prediced_icd_label':label_encoder.inverse_transform(predicted_icd)
+}
+
+
+# In[30]:
+
+
+new_df = pd.DataFrame(new_df)
+
+
+# In[12]:
+
+
+new_df.to_csv('test_xgboost.csv')
 
 
 # In[ ]:
 
 
-log_reg()
-ran_for()
-xgboost_test()
+f = open("test_xgboost.txt", "w")
+f.write(classification_report(y_test, predicted_icd, target_names=label_encoder.classes_))
+f.close()
 

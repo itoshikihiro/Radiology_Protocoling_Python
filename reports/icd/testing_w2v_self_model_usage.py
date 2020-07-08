@@ -1,3 +1,8 @@
+#!/usr/bin/env python
+# coding: utf-8
+
+# In[1]:
+
 
 import json
 import pandas as pd
@@ -8,7 +13,6 @@ from gensim.parsing import preprocessing
 from gensim.parsing.preprocessing import strip_tags, strip_punctuation,strip_numeric,remove_stopwords, stem_text
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.feature_extraction.text import TfidfTransformer
-from sklearn.model_selection import train_test_split
 from sklearn.pipeline import Pipeline
 import sklearn.preprocessing
 from sklearn.preprocessing import LabelEncoder
@@ -21,21 +25,18 @@ from xgboost import XGBClassifier
 
 from sklearn.metrics import accuracy_score
 from sklearn.metrics import classification_report
+from sklearn.metrics import roc_auc_score
 from string import ascii_uppercase
 
 import gensim
 import logging
 
 import re
+import pickle
 
+wv = gensim.models.KeyedVectors.load_word2vec_format("../vectorization_models/embedding_word2vec.txt", binary=False)
+wv.init_sims(replace=True)
 
-# In[125]:
-
-
-dv = gensim.models.doc2vec.Doc2Vec.load("../vectorization_models/doc2vec_trained.model")
-
-
-# In[99]:
 
 
 def remove_special_char(txt):
@@ -249,103 +250,171 @@ def load_label(df):
     return general_icd_label
 
 
-# In[128]:
-
-
-train_df = load_data("../data/train.xlsx")
-test_df = load_data("../data/test.xlsx")
+# In[12]:
 data_df = load_data("../data/filter.xlsx")
-
-
-
-train_df['general_icd_label'] = load_label(train_df)
-test_df['general_icd_label'] = load_label(test_df)
 data_df['general_icd_label'] = load_label(data_df)
 
-
-# In[109]:
-
-
-X_train = train_df['ICD_text']
-y_train = train_df['general_icd_label']
-X_test = test_df['ICD_text']
-y_test = test_df['general_icd_label']
-
-
-# In[133]:
-
+features = data_df['ICD_text']
+labels = data_df['general_icd_label']
 
 label_encoder = LabelEncoder()
+label_encoder.fit(labels)
 
-label_encoder.fit(data_df['general_icd_label'])
+test_df = load_data("../data/test.xlsx")
 
-y_train = label_encoder.transform(y_train)
+
+test_df['general_icd_label'] = load_label(test_df)
+
+
+X_test = test_df['ICD_text']
+y_test = test_df['general_icd_label']
 y_test = label_encoder.transform(y_test)
 
 
-# In[135]:
+def word_averaging(wv, words):
+    all_words, mean = set(), []
+
+    for word in words:
+        if isinstance(word, np.ndarray):
+            mean.append(word)
+        elif word in wv.vocab:
+            mean.append(wv.vectors_norm[wv.vocab[word].index])
+            all_words.add(wv.vocab[word].index)
+
+    if not mean:
+        logging.warning("cannot compute similarity with no input %s", words)
+        # FIXME: remove these examples in pre-processing
+        print(words)
+        return np.zeros(wv.vector_size,)
+
+    mean = np.array(mean).mean(axis=0)
+    return mean
+
+def  word_averaging_list(wv, text_list):
+    return np.vstack([word_averaging(wv, post) for post in text_list ])
 
 
-def vectorize_data(dv, data):
-    return np.vstack([dv.infer_vector(d) for d in data])
+X_test = word_averaging_list(wv, X_test)
+
+# In[9]:
 
 
-# In[136]:
+def load_model_predict(model_name, test_data):
+    loaded_model = pickle.load(open(model_name, 'rb'))
+    result = loaded_model.predict(test_data)
+    return result
 
 
-X_train = vectorize_data(dv,X_train)
-X_test = vectorize_data(dv,X_test)
+# In[10]:
 
 
-# In[137]:
+predicted_icd = load_model_predict('save_log.sav', X_test)
 
 
-def log_reg():
-    print(" ")
-    print("logistic regression")
-    reg = LogisticRegression(
-        random_state=0,
-        solver = 'newton-cg',
-        class_weight='balanced')
-    reg = reg.fit(X_train, y_train)
-    pred = reg.predict(X_test)
-    print (classification_report(y_test, pred, target_names=label_encoder.classes_))
+# In[16]:
 
 
-# In[82]:
+new_df = {
+    'radiology_text':test_df['Radiology text'],
+    'icd_text':test_df['ICD_text'],
+    'icd':test_df['icd'],
+    'ori_icd_label':label_encoder.inverse_transform(y_test),
+    'prediced_icd_label':label_encoder.inverse_transform(predicted_icd)
+}
 
 
-def ran_for():
-    print(" ")
-    print("random forest")
-    reg = RandomForestClassifier(
-        random_state=0,
-        class_weight = 'balanced',
-        n_jobs=-1)
-    reg = reg.fit(X_train, y_train)
-    pred = reg.predict(X_test)
-    print (classification_report(y_test, pred, target_names=label_encoder.classes_))
+# In[18]:
+
+
+new_df = pd.DataFrame(new_df)
+
+
+# In[12]:
+
+
+new_df.to_csv('test_log.csv')
+
+
+# In[32]:
+
+
+f = open("test_log.txt", "w")
+f.write(classification_report(y_test, predicted_icd, target_names=label_encoder.classes_))
+f.close()
+
+
+# In[25]:
+
+
+predicted_icd = load_model_predict('save_ran_for.sav', X_test)
+
+
+# In[26]:
+
+
+new_df = {
+    'radiology_text':test_df['Radiology text'],
+    'icd_text':test_df['ICD_text'],
+    'icd':test_df['icd'],
+    'ori_icd_label':label_encoder.inverse_transform(y_test),
+    'prediced_icd_label':label_encoder.inverse_transform(predicted_icd)
+}
+
+
+# In[27]:
+
+
+new_df = pd.DataFrame(new_df)
+
+
+# In[12]:
+
+
+new_df.to_csv('test_icd_ran_for.csv')
 
 
 # In[ ]:
 
 
-def xgboost_test():
-    print(" ")
-    print("xgboost")
-    reg = XGBClassifier(
-        n_estimators=100,
-        max_depth=3,
-        random_state=0,
-        n_jobs = -1)
-    reg = reg.fit(X_train, y_train)
-    pred = reg.predict(X_test)
-    print (classification_report(y_test, pred, target_names=label_encoder.classes_))
+f = open("test_ran_for.txt", "w")
+f.write(classification_report(y_test, predicted_icd, target_names=label_encoder.classes_))
+f.close()
+
+
+# In[28]:
+
+
+predicted_icd = load_model_predict('save_xgboost.sav', X_test)
+
+
+# In[29]:
+
+
+new_df = {
+    'radiology_text':test_df['Radiology text'],
+    'icd_text':test_df['ICD_text'],
+    'icd':test_df['icd'],
+    'ori_icd_label':label_encoder.inverse_transform(y_test),
+    'prediced_icd_label':label_encoder.inverse_transform(predicted_icd)
+}
+
+
+# In[30]:
+
+
+new_df = pd.DataFrame(new_df)
+
+
+# In[12]:
+
+
+new_df.to_csv('test_xgboost.csv')
 
 
 # In[ ]:
 
 
-log_reg()
-ran_for()
-xgboost_test()
+f = open("test_xgboost.txt", "w")
+f.write(classification_report(y_test, predicted_icd, target_names=label_encoder.classes_))
+f.close()
+
